@@ -96,7 +96,7 @@ SITE_DEFAULTS = {
     "entrySub": "搜索 · 试听 · 歌词 · 本机下载",
     "entryBtn": "进入播放站",
     "entryTags": ["多音源", "双音质", "歌词", "账号同步"],
-    "entryFoot": "免费音乐播放站 · 本地部署 v2.3 | 数据来自公开音乐接口",
+    "entryFoot": "免费音乐播放站 · 本地部署 v1.0.0 | 数据来自公开音乐接口",
 }
 
 SITE_TEXT_LIMITS = {
@@ -483,7 +483,7 @@ def clean_settings(s):
 # HTTP 处理
 # ----------------------------------------------------------------------------
 class Handler(http.server.BaseHTTPRequestHandler):
-    server_version = "FreeMusicStreamingSite/2.3"
+    server_version = "FreeMusicStreamingSite/1.0.0"
     protocol_version = "HTTP/1.1"
 
     # ------------------------------------------------------------------ 工具
