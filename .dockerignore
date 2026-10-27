@@ -1,0 +1,31 @@
+# 构建上下文瘦身：镜像里只需要 server.py 与 public/
+.git
+.gitignore
+.gitattributes
+.github
+
+# 运行数据（绝不进镜像）
+data/
+*.log
+*.tmp
+
+# 文档与预览图
+docs/
+*.md
+LICENSE
+
+# 本地开发 / 系统垃圾
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 容器编排文件本身
+Dockerfile
+docker-compose.yml
+.dockerignore

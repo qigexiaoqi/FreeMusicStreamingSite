@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+# FreeMusicStreamingSite · 免费音乐播放站
+#
+#   docker compose up -d --build      # 构建并后台启动
+#   docker compose logs -f            # 看日志（首次启动会打印 admin/admin）
+#   docker compose down               # 停止（数据卷保留）
+#
+# 访问 http://127.0.0.1:7788       后台 http://127.0.0.1:7788/admin
+# ---------------------------------------------------------------------------
+services:
+  freemusic:
+    build:
+      context: .
+    image: freemusicstreamingsite:latest
+    container_name: freemusic
+    restart: unless-stopped
+
+    ports:
+      - "7788:7788"
+
+    environment:
+      TZ: Asia/Shanghai
+      XQ_PORT: "7788"
+
+    volumes:
+      # 命名卷：开箱即用，权限自动正确
+      - freemusic-data:/app/data
+      # 想直接看宿主机上的数据文件，改用下面这行（Linux 上需先 chown 10001）：
+      # - ./data:/app/data
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7788/health', timeout=2).status == 200 else 1)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+volumes:
+  freemusic-data:

@@ -1209,12 +1209,12 @@ class Server(http.server.ThreadingHTTPServer):
     allow_reuse_address = True
 
 
-def pick_port(start):
+def pick_port(start, host="127.0.0.1"):
     for port in range(start, start + 30):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
-                s.bind(("127.0.0.1", port))
+                s.bind((host, port))
                 return port
             except OSError:
                 continue
@@ -1227,12 +1227,21 @@ def main():
     SECRET = load_secret()
     created = bootstrap_admin()
 
+    # 监听地址：默认只给本机；容器里用 XQ_HOST=0.0.0.0
+    host = (os.environ.get("XQ_HOST") or "127.0.0.1").strip() or "127.0.0.1"
+
     port = DEFAULT_PORT
+    try:
+        port = int(os.environ.get("XQ_PORT") or DEFAULT_PORT)
+    except ValueError:
+        port = DEFAULT_PORT
     for arg in sys.argv[1:]:
         if arg.isdigit():
             port = int(arg)
-    port = pick_port(port)
-    url = "http://127.0.0.1:%d" % port
+    port = pick_port(port, host)
+
+    shown_host = "127.0.0.1" if host in ("0.0.0.0", "::", "") else host
+    url = "http://%s:%d" % (shown_host, port)
 
     banner = r"""
   ==================================================================
@@ -1242,7 +1251,8 @@ def main():
 """
     print(banner)
     print("  " + "=" * 60)
-    print("   本机地址 : " + url)
+    print("   监听地址 : %s:%d" % (host, port))
+    print("   访问地址 : " + url)
     print("   管理后台 : " + url + "/admin")
     print("   数据目录 : " + DATA_DIR)
     if created:
@@ -1252,10 +1262,12 @@ def main():
     print("   关闭窗口即可停止服务")
     print("  " + "=" * 60 + "\n")
 
-    if "--no-browser" not in sys.argv:
+    no_browser = ("--no-browser" in sys.argv) or \
+        (os.environ.get("XQ_NO_BROWSER", "").strip().lower() in ("1", "true", "yes", "on"))
+    if not no_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
 
-    httpd = Server(("127.0.0.1", port), Handler)
+    httpd = Server((host, port), Handler)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

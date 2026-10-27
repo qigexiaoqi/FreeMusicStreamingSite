@@ -9,11 +9,12 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)]()
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-8b5cf6)]()
 [![Mobile](https://img.shields.io/badge/mobile-responsive-38bdf8)]()
 [![License](https://img.shields.io/badge/license-MIT-ff5fa2)](LICENSE)
 
-[快速开始](#-快速开始) · [功能一览](#-功能一览) · [管理后台](#-管理后台) · [常见问题](#-常见问题)
+[快速开始](#-快速开始) · [Docker 部署](#-docker-部署推荐给-nas--服务器) · [功能一览](#-功能一览) · [管理后台](#-管理后台) · [常见问题](#-常见问题)
 
 </div>
 
@@ -94,6 +95,62 @@ python3 server.py
 
 > **不用装任何依赖。** 服务端只用 Python 标准库，前端是原生 HTML / CSS / JS。
 > 换端口：`web.bat 9000` 或 `python3 server.py 9000`（被占用会自动顺延）。
+
+### 🐳 Docker 部署（推荐给 NAS / 服务器）
+
+镜像基于 `python:3.12-slim`，只拷贝 `server.py` 与 `public/`，非 root 运行，自带健康检查。
+
+```bash
+git clone https://github.com/qigexiaoqi/Free-MusicStreamingSite.git
+cd FreeMusicStreamingSite
+
+# 构建 + 后台启动
+docker compose up -d --build
+
+# 首次启动日志里会打印 admin / admin
+docker compose logs -f
+```
+
+访问 `http://<主机IP>:7788`，后台 `http://<主机IP>:7788/admin`
+（容器内已监听 `0.0.0.0`，所以局域网内其它设备也能访问）。
+
+不用 compose 也可以：
+
+```bash
+docker build -t freemusicstreamingsite:latest .
+
+docker run -d --name freemusic \
+  -p 7788:7788 \
+  -v freemusic-data:/app/data \
+  --restart unless-stopped \
+  freemusicstreamingsite:latest
+```
+
+**数据持久化**：账号、站点配置、上传的 Logo、审计日志都在容器内 `/app/data`。
+compose 默认挂了命名卷 `freemusic-data`；想直接看宿主机文件就改用：
+
+```yaml
+volumes:
+  - ./data:/app/data     # Linux 上先执行：mkdir -p data && sudo chown 10001 data
+```
+
+**环境变量**
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `XQ_HOST` | `127.0.0.1` | 监听地址；容器内固定 `0.0.0.0` |
+| `XQ_PORT` | `7788` | 监听端口（命令行数字参数优先级更高） |
+| `XQ_NO_BROWSER` | 空 | 设为 `1` 则不尝试拉起浏览器（容器内默认开启） |
+
+**运维小抄**
+
+```bash
+docker compose ps                 # 状态 + 健康检查结果
+docker compose restart            # 重启
+docker compose down               # 停止（数据卷保留）
+docker compose down -v            # 停止并删除数据卷（账号会一起清空）
+docker compose pull && docker compose up -d   # 更新镜像后重启
+```
 
 ### 默认管理员
 
@@ -221,12 +278,15 @@ FreeMusicStreamingSite/
 ├─ web.bat              一键启动（Windows，纯 ASCII）
 ├─ server.py            本地服务：静态 + 音乐反代 + 音频中转 + 下载中转
 │                       + 账号 + 云端同步 + 后台 API + 站点配置
+├─ Dockerfile           容器镜像（python:3.12-slim，非 root，自带健康检查）
+├─ docker-compose.yml   一键编排：端口 7788 + 数据卷 freemusic-data
+├─ .dockerignore        构建上下文瘦身
 ├─ public/
 │  ├─ index.html        播放站结构
 │  ├─ style.css         全部样式（极光 / 玻璃 / 黑胶 / 歌词 / 手机抽屉）
 │  ├─ app.js            全部逻辑（搜索 / 队列 / 最近 / 歌词 / 下载 / 登录 / 外观）
 │  └─ admin.html        管理后台（单文件：概览 / 用户 / 站点设置 / 审计）
-├─ data/                运行后自动生成（不入库）
+├─ data/                运行后自动生成（不入库 / 不进镜像）
 │  ├─ users.json        账号与云端数据
 │  ├─ site.json         站点外观配置
 │  ├─ uploads/          后台上传的 Logo
@@ -304,7 +364,23 @@ FreeMusicStreamingSite/
 <details>
 <summary><b>能部署到公网吗？</b></summary>
 
-可以，但请先做三件事：改掉 admin 密码、在反向代理上加 HTTPS、考虑把服务绑定到 `0.0.0.0` 并在前面加一层鉴权。当前默认只监听 `127.0.0.1`，仅本机可访问。
+可以。最省事的方式是 Docker：
+
+```bash
+docker compose up -d --build
+```
+
+容器内已经监听 `0.0.0.0`，宿主机 `-p 7788:7788` 之后局域网即可访问。
+公网暴露前请至少做三件事：**改掉 admin 密码**、在反向代理（Nginx / Caddy / Traefik）上加 HTTPS、加一层访问控制或限流。
+
+本地直跑时默认只监听 `127.0.0.1`，仅本机可访问；想局域网访问用 `XQ_HOST=0.0.0.0 python server.py`。
+</details>
+
+<details>
+<summary><b>容器起来了但数据没了 / 权限报错？</b></summary>
+
+所有数据都在容器内 `/app/data`，**必须挂卷**才会持久化。
+compose 默认用命名卷 `freemusic-data`；改用 `./data:/app/data` 绑定时，Linux 上要先 `mkdir -p data && sudo chown 10001 data`（镜像内以 uid 10001 的非 root 用户运行）。
 </details>
 
 ---
@@ -315,6 +391,7 @@ FreeMusicStreamingSite/
 - **前端**：原生 HTML + CSS + JavaScript（无框架、无构建）
 - **存储**：JSON 文件（`data/`），原子写入
 - **鉴权**：PBKDF2-SHA256 口令哈希 + HMAC 签名 HttpOnly Cookie（30 天）
+- **部署**：Windows 双击 `web.bat` / 任意平台 `python3 server.py` / `docker compose up -d`（镜像 `python:3.12-slim`，非 root + healthcheck）
 
 ---
 
