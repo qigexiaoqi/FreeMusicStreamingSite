@@ -9,8 +9,8 @@ FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="FreeMusicStreamingSite" \
       org.opencontainers.image.description="免费音乐播放站 · 本地部署的在线音乐播放站（搜索 / 歌词 / 下载 / 账号同步 / 管理后台）" \
-      org.opencontainers.image.source="https://github.com/qigexiaoqi/Free-MusicStreamingSite" \
-      org.opencontainers.image.url="https://github.com/qigexiaoqi/Free-MusicStreamingSite" \
+      org.opencontainers.image.source="https://github.com/qigexiaoqi/FreeMusicStreamingSite" \
+      org.opencontainers.image.url="https://github.com/qigexiaoqi/FreeMusicStreamingSite" \
       org.opencontainers.image.licenses="MIT"
 
 # 容器内必须监听 0.0.0.0，且不能尝试拉起浏览器

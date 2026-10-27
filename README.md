@@ -101,7 +101,7 @@ python3 server.py
 镜像基于 `python:3.12-slim`，只拷贝 `server.py` 与 `public/`，非 root 运行，自带健康检查。
 
 ```bash
-git clone https://github.com/qigexiaoqi/Free-MusicStreamingSite.git
+git clone https://github.com/qigexiaoqi/FreeMusicStreamingSite.git
 cd FreeMusicStreamingSite
 
 # 构建 + 后台启动
