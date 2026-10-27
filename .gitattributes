@@ -1,0 +1,20 @@
+# 统一换行：Windows 批处理必须 CRLF，避免直接下载 ZIP 后无法运行
+* text=auto
+
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+*.py   text eol=lf
+*.js   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.md   text eol=lf
+*.svg  text eol=lf
+*.json text eol=lf
+
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
