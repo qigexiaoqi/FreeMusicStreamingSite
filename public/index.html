@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#06060b" />
+<title>免费音乐播放站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23ff5fa2'/><stop offset='.5' stop-color='%23a78bfa'/><stop offset='1' stop-color='%2338bdf8'/></linearGradient></defs><rect width='64' height='64' rx='16' fill='%230a0a12'/><circle cx='32' cy='32' r='17' fill='none' stroke='url(%23g)' stroke-width='3'/><circle cx='32' cy='32' r='4.5' fill='url(%23g)'/></svg>" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===================== 图标精灵 ===================== -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.4" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="4" height="14" rx="1.4" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M18 6v12L9 12z" fill="currentColor" stroke="none"/><rect x="5" y="6" width="2.4" height="12" rx="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M6 6v12l9-6z" fill="currentColor" stroke="none"/><rect x="16.6" y="6" width="2.4" height="12" rx="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7.5 11.5L12 16l4.5-4.5"/><path d="M4.5 19.5h15"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5h3.2L12 5.5v13L7.2 14.5H4z"/><path d="M15.5 9a4.2 4.2 0 010 6"/><path d="M18 6.5a7.6 7.6 0 010 11"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5h3.2L12 5.5v13L7.2 14.5H4z"/><path d="M16 9.5l4.5 5"/><path d="M20.5 9.5L16 14.5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M4 7h12"/><path d="M4 12h12"/><path d="M4 17h8"/><circle cx="19" cy="15.5" r="2"/><path d="M21 15.5V8l-2 .6"/></symbol>
+  <symbol id="i-order" viewBox="0 0 24 24"><path d="M4 7h11"/><path d="M4 12h16"/><path d="M4 17h9"/><path d="M17.5 5.5L20 8l-2.5 2.5"/></symbol>
+  <symbol id="i-single" viewBox="0 0 24 24"><path d="M4 7.5h6"/><path d="M4 16.5h6"/><path d="M12.5 5.5l3 1.6v10.4"/><path d="M15.5 17.5h5"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M4 7h3.5l3 5"/><path d="M4 17h3.5l9-10H20"/><path d="M17 4l3 3-3 3"/><path d="M17 14l3 3-3 3"/><path d="M12.5 13.5l1.4 2"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M11 4H5.5A1.5 1.5 0 004 5.5V11l9 9 7-7z"/><circle cx="7.6" cy="7.6" r="1.3"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13"/><path d="M13 6.5L18.5 12 13 17.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.5c.9-3.5 3.7-5.4 7.2-5.4s6.3 1.9 7.2 5.4"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 5.5H7.5A1.5 1.5 0 006 7v10a1.5 1.5 0 001.5 1.5H14"/><path d="M17 8.5L20.5 12 17 15.5"/><path d="M11 12h9"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.5v5.4c0 4.2-2.8 7.3-7 9.1-4.2-1.8-7-4.9-7-9.1V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7l.8 12.2h9.4L17.5 7"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.21-3.37-1.21-.45-1.18-1.11-1.49-1.11-1.49-.91-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.4 9.4 0 015 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.1 10.1 0 0022 12.25C22 6.58 17.52 2 12 2z" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<!-- ===================== 入场界面 ===================== -->
+<div class="entry" id="entry">
+  <div class="entry-aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="entry-grid" aria-hidden="true"></div>
+
+  <div class="entry-card">
+    <div class="entry-stage">
+      <div class="entry-vinyl">
+        <div class="ev-grooves"></div>
+        <div class="ev-label" id="evLabel"><span>柒</span></div>
+      </div>
+      <div class="entry-halo"></div>
+    </div>
+
+    <p class="entry-kicker"><span class="dot"></span><span id="entryKicker">LOCAL MUSIC STATION</span></p>
+    <h1 class="entry-title" id="entryTitle">免费音乐播放站</h1>
+    <p class="entry-sub" id="entrySub">搜索 · 试听 · 歌词 · 本机下载</p>
+
+    <button class="entry-btn" id="enterBtn">
+      <span id="entryBtnText">进入播放站</span>
+      <svg><use href="#i-arrow"/></svg>
+    </button>
+
+    <ul class="entry-tags" id="entryTags">
+      <li>多音源</li>
+      <li>双音质</li>
+      <li>歌词</li>
+      <li>账号同步</li>
+    </ul>
+
+    <a class="entry-repo" id="repoLink"
+       href="https://github.com/qigexiaoqi/Free-MusicStreamingSite"
+       target="_blank" rel="noopener noreferrer"
+       title="在 GitHub 上查看源码">
+      <svg class="gh"><use href="#i-github"/></svg>
+      <span>github.com/qigexiaoqi/Free-MusicStreamingSite</span>
+      <svg class="ext"><use href="#i-arrow"/></svg>
+    </a>
+  </div>
+
+  <p class="entry-foot" id="entryFoot">免费音乐播放站 · 本地部署 v2.3 &nbsp;|&nbsp; 数据来自公开音乐接口</p>
+</div>
+
+<!-- ===================== 主界面 ===================== -->
+<div class="app" id="app" aria-hidden="true">
+
+  <header class="topbar">
+    <a class="brand" id="brand" href="#" title="回到入场界面">
+      <span class="brand-mark" id="brandMark"><i></i></span>
+      <span class="brand-text">
+        <strong id="siteName">免费音乐播放站</strong>
+        <em id="brandEn">FREE MUSIC STREAMING</em>
+      </span>
+    </a>
+
+    <form class="searchbar" id="searchForm" role="search">
+      <svg class="sb-icon"><use href="#i-search"/></svg>
+      <input id="q" type="search" placeholder="搜索歌曲 / 歌手 / 专辑…" autocomplete="off" spellcheck="false" />
+      <button class="sb-btn" type="submit">搜索</button>
+    </form>
+
+    <div class="selectors">
+      <label class="sel" title="选择音源">
+        <span>音源</span>
+        <select id="sourceSel" aria-label="选择音源"></select>
+      </label>
+      <label class="sel" title="在线播放音质">
+        <span>播放</span>
+        <select id="qualitySel" aria-label="在线播放音质">
+          <option value="128">128K</option>
+          <option value="192">192K</option>
+          <option value="320" selected>320K</option>
+          <option value="740">740K</option>
+          <option value="999">999K</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="account" id="accountArea">
+      <button class="acct-btn" id="loginBtn" type="button">
+        <svg><use href="#i-user"/></svg><span>登录</span>
+      </button>
+
+      <div class="acct-in" id="acctIn" hidden>
+        <button class="acct-avatar" id="acctAvatar" type="button" aria-haspopup="true">
+          <span id="acctInitial">U</span>
+        </button>
+        <div class="acct-menu" id="acctMenu">
+          <div class="acct-head">
+            <strong id="acctName">—</strong>
+            <span id="acctRole">普通用户</span>
+          </div>
+          <button class="acct-item" id="acctAdmin" type="button" hidden>
+            <svg><use href="#i-shield"/></svg> 管理后台
+          </button>
+          <button class="acct-item" id="acctLogout" type="button">
+            <svg><use href="#i-logout"/></svg> 退出登录
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main" id="main">
+    <!-- 左：列表 -->
+    <section class="panel results">
+      <div class="panel-head">
+        <div class="tabs" id="tabs">
+          <button class="tab is-active" data-tab="search">搜索结果</button>
+          <button class="tab" data-tab="queue">播放队列 <em id="queueCount">0</em></button>
+          <button class="tab" data-tab="recent">最近播放 <em id="recentCount">0</em></button>
+        </div>
+        <div class="head-actions">
+          <span class="status-dot" id="netDot" title="接口状态"></span>
+          <button class="ghost-btn" id="playAllBtn" type="button">
+            <svg><use href="#i-play"/></svg> 播放全部
+          </button>
+          <button class="ghost-btn ghost-danger" id="clearBtn" type="button" hidden>
+            <svg><use href="#i-trash"/></svg> 清空
+          </button>
+        </div>
+      </div>
+
+      <div class="list-wrap" id="listWrap">
+        <div class="empty" id="emptyState">
+          <div class="empty-art"><svg><use href="#i-spark"/></svg></div>
+          <p class="empty-title">今天想听点什么？</p>
+          <p class="empty-sub">在上方输入歌名或歌手，回车即可搜索</p>
+          <div class="empty-chips" id="hotChips"></div>
+        </div>
+        <div class="track-list" id="trackList" hidden></div>
+      </div>
+
+      <div class="load-more-wrap">
+        <button class="ghost-btn" id="loadMoreBtn" type="button" hidden>加载更多</button>
+      </div>
+    </section>
+
+    <!-- 右：正在播放 + 歌词（手机端变为全屏抽屉） -->
+    <aside class="panel now" id="nowPanel">
+      <div class="now-grab" aria-hidden="true"><span></span></div>
+      <button class="now-close" id="nowClose" type="button" aria-label="收起歌词">
+        <svg><use href="#i-chevron"/></svg>
+      </button>
+
+      <div class="now-top">
+        <div class="now-cover" id="nowCover">
+          <div class="vinyl" id="vinyl">
+            <div class="vinyl-grooves"></div>
+            <img id="coverImg" alt="" />
+            <div class="vinyl-hole"></div>
+          </div>
+          <div class="cover-glow"></div>
+        </div>
+
+        <div class="now-meta">
+          <h2 id="nowTitle">尚未播放</h2>
+          <p id="nowArtist">搜一首歌，开始今晚的循环</p>
+          <div class="now-badges">
+            <span class="badge" id="badgeSource">音源 —</span>
+            <span class="badge" id="badgeBr">音质 —</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lyric-head">
+        <span class="lyric-label">歌词</span>
+        <label class="lyric-offset" title="歌词偏移">
+          <svg><use href="#i-tag"/></svg>
+          <input type="range" id="lyricOffset" min="-3" max="3" step="0.1" value="0" />
+          <em id="offsetVal">0.0s</em>
+        </label>
+      </div>
+
+      <div class="lyric-scroll" id="lyricScroll">
+        <div class="lyric-inner" id="lyricInner">
+          <p class="lyric-tip">暂无歌词</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- 底部播放器 -->
+  <footer class="playerbar" id="playerbar">
+    <div class="pb-left" id="pbLeft">
+      <div class="pb-cover-wrap">
+        <img id="pbCover" class="pb-cover" alt="" />
+        <div class="pb-eq" id="pbEq"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="pb-meta">
+        <strong id="pbTitle">未在播放</strong>
+        <span id="pbArtist">—</span>
+      </div>
+    </div>
+
+    <div class="pb-center">
+      <div class="pb-controls">
+        <button class="icon-btn" id="modeBtn" type="button" title="顺序播放">
+          <svg><use href="#i-order"/></svg>
+        </button>
+        <button class="icon-btn" id="prevBtn" type="button" title="上一首">
+          <svg><use href="#i-prev"/></svg>
+        </button>
+        <button class="play-btn" id="playBtn" type="button" title="播放 / 暂停">
+          <svg><use href="#i-play"/></svg>
+        </button>
+        <button class="icon-btn" id="nextBtn" type="button" title="下一首">
+          <svg><use href="#i-next"/></svg>
+        </button>
+        <button class="icon-btn" id="dlBtn" type="button" title="下载到本机">
+          <svg><use href="#i-download"/></svg>
+        </button>
+      </div>
+      <div class="pb-progress">
+        <span class="t" id="curTime">00:00</span>
+        <input type="range" class="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="进度" />
+        <span class="t" id="durTime">00:00</span>
+      </div>
+    </div>
+
+    <div class="pb-right">
+      <button class="icon-btn" id="volBtn" type="button" title="静音">
+        <svg><use href="#i-volume"/></svg>
+      </button>
+      <input type="range" class="range vol-range" id="vol" min="0" max="100" value="82" aria-label="音量" />
+    </div>
+
+    <audio id="audio" preload="metadata"></audio>
+  </footer>
+</div>
+
+<!-- ===================== 登录 / 注册 ===================== -->
+<div class="modal" id="authModal" hidden>
+  <div class="modal-mask" data-close="1"></div>
+  <div class="modal-card auth-card">
+    <button class="modal-x" data-close="1" aria-label="关闭"><svg><use href="#i-close"/></svg></button>
+
+    <div class="auth-brand">
+      <span class="brand-mark" id="authBrandMark"><i></i></span>
+      <div>
+        <strong id="authSiteName">免费音乐播放站</strong>
+        <em>登录后同步播放队列与最近播放</em>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab is-active" data-mode="login" type="button">登录</button>
+      <button class="auth-tab" data-mode="register" type="button">注册</button>
+    </div>
+
+    <form id="authForm" autocomplete="on">
+      <label class="field">
+        <span>用户名</span>
+        <input id="authUser" name="username" type="text" autocomplete="username" placeholder="3-20 位，中文/字母/数字/下划线" />
+      </label>
+      <label class="field">
+        <span>密码</span>
+        <input id="authPass" name="password" type="password" autocomplete="current-password" placeholder="至少 6 位" />
+      </label>
+      <p class="auth-error" id="authError" hidden></p>
+      <button class="auth-submit" id="authSubmit" type="submit">登录</button>
+    </form>
+
+    <p class="auth-hint" id="authHint">未登录也能正常听歌，登录后队列与最近播放会跟着账号走。</p>
+  </div>
+</div>
+
+<!-- ===================== 下载音质选择 ===================== -->
+<div class="modal" id="dlModal" hidden>
+  <div class="modal-mask" data-close="1"></div>
+  <div class="modal-card dl-card" role="dialog" aria-modal="true" aria-labelledby="dlTitle">
+    <button class="modal-x" data-close="1" aria-label="关闭"><svg><use href="#i-close"/></svg></button>
+
+    <h3 class="dl-title" id="dlTitle">选择下载音质</h3>
+    <p class="dl-song" id="dlSong">—</p>
+
+    <div class="dl-opts" id="dlOpts" role="radiogroup" aria-label="下载音质">
+      <button class="dl-opt" type="button" role="radio" data-br="128">
+        <strong>标准</strong><em>128K</em>
+      </button>
+      <button class="dl-opt" type="button" role="radio" data-br="192">
+        <strong>较高</strong><em>192K</em>
+      </button>
+      <button class="dl-opt" type="button" role="radio" data-br="320">
+        <strong>高品质</strong><em>320K</em>
+      </button>
+      <button class="dl-opt" type="button" role="radio" data-br="740">
+        <strong>无损</strong><em>740K</em>
+      </button>
+      <button class="dl-opt" type="button" role="radio" data-br="999">
+        <strong>Hi-Res</strong><em>999K</em>
+      </button>
+    </div>
+
+    <p class="dl-tip">文件将保存到当前访问设备的下载目录</p>
+
+    <div class="dl-actions">
+      <button class="dl-cancel" id="dlCancel" type="button">取消</button>
+      <button class="dl-ok" id="dlOk" type="button">确定下载</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

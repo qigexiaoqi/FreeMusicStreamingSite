@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>管理后台 · 免费音乐播放站</title>
+<style>
+:root{
+  --bg:#07070c; --card:rgba(255,255,255,.04); --card-2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+  --txt:#eef0f6; --txt-2:#b3b8c8; --dim:#767c92;
+  --a1:#ff5fa2; --a2:#a78bfa; --a3:#38bdf8;
+  --grad:linear-gradient(115deg,var(--a1),var(--a2) 48%,var(--a3));
+  --ok:#3ddc97; --warn:#ffc857; --bad:#ff6b6b;
+  --ease:cubic-bezier(.22,.8,.28,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Inter","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--txt); min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(40% 34% at 8% 0%,rgba(255,95,162,.16),transparent 62%),
+    radial-gradient(42% 38% at 92% 4%,rgba(56,189,248,.13),transparent 62%),
+    radial-gradient(46% 40% at 70% 100%,rgba(167,139,250,.16),transparent 64%);
+  filter:blur(26px);
+}
+[hidden]{display:none!important}
+svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+button{font-family:inherit}
+input,select{font-family:inherit}
+
+/* ---------------- 布局 ---------------- */
+.shell{position:relative;z-index:1;display:grid;grid-template-columns:224px minmax(0,1fr);min-height:100vh}
+
+.side{
+  border-right:1px solid var(--line);
+  padding:20px 14px;display:flex;flex-direction:column;gap:22px;
+  background:rgba(255,255,255,.02);backdrop-filter:blur(16px);
+  position:sticky;top:0;height:100vh;
+}
+.side-brand{display:flex;align-items:center;gap:11px;padding:0 6px}
+.brand-mark{
+  width:38px;height:38px;border-radius:12px;background:var(--grad);
+  display:grid;place-items:center;flex:none;
+  box-shadow:0 10px 24px -10px rgba(255,95,162,.9),inset 0 1px 0 rgba(255,255,255,.4);
+}
+.brand-mark i{width:14px;height:14px;border-radius:50%;border:2.4px solid #fff;position:relative}
+.brand-mark i::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#fff}
+.side-brand strong{display:block;font-size:14px;letter-spacing:.04em}
+.side-brand em{display:block;font-style:normal;font-size:9.5px;letter-spacing:.24em;color:var(--dim);margin-top:3px}
+
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 12px;border:0;border-radius:11px;
+  background:transparent;color:var(--txt-2);
+  font-size:13px;text-align:left;cursor:pointer;
+  transition:all .22s var(--ease);
+}
+.nav-item svg{width:16px;height:16px;flex:none}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--txt)}
+.nav-item.is-active{
+  color:#fff;background:linear-gradient(90deg,rgba(255,95,162,.2),rgba(167,139,250,.1));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.side-foot{margin-top:auto;padding:0 6px;font-size:11px;color:var(--dim);line-height:1.7}
+.side-foot a{color:var(--txt-2);text-decoration:none}
+.side-foot a:hover{color:#fff}
+
+.main{padding:22px 26px 40px;min-width:0}
+.top{display:flex;align-items:center;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.top h1{font-size:19px;font-weight:700;letter-spacing:.02em}
+.top .sub{font-size:12px;color:var(--dim);margin-top:4px}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.who{
+  display:flex;align-items:center;gap:9px;
+  padding:6px 12px 6px 6px;border-radius:99px;
+  border:1px solid var(--line-2);background:rgba(255,255,255,.05);
+  font-size:12.5px;
+}
+.who .dot{width:26px;height:26px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-size:12px;font-weight:700}
+
+.btn{
+  height:36px;padding:0 15px;border-radius:10px;
+  border:1px solid var(--line-2);background:rgba(255,255,255,.05);
+  color:var(--txt-2);font-size:12.5px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:all .22s var(--ease);white-space:nowrap;
+}
+.btn:hover{color:#fff;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
+.btn svg{width:14px;height:14px}
+.btn-primary{background:var(--grad);border:0;color:#fff;font-weight:600;box-shadow:0 10px 24px -12px rgba(255,95,162,.9)}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-danger{border-color:rgba(255,107,107,.4);color:#ffb3b3}
+.btn-danger:hover{background:rgba(255,107,107,.16);color:#ffd6d6;border-color:rgba(255,107,107,.7)}
+.btn-sm{height:29px;padding:0 11px;font-size:11.5px;border-radius:8px}
+
+/* ---------------- 卡片 ---------------- */
+.grid{display:grid;gap:14px}
+.cards{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.card{
+  border:1px solid var(--line);border-radius:16px;
+  background:linear-gradient(180deg,var(--card-2),var(--card));
+  padding:16px 18px;backdrop-filter:blur(18px);
+  box-shadow:0 22px 50px -26px rgba(0,0,0,.9);
+}
+.card .k{font-size:11.5px;letter-spacing:.1em;color:var(--dim)}
+.card .v{font-size:26px;font-weight:700;margin-top:8px;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.card .h{font-size:11px;color:var(--dim);margin-top:6px}
+.card.accent .v{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.panel{
+  border:1px solid var(--line);border-radius:16px;
+  background:linear-gradient(180deg,var(--card-2),var(--card));
+  backdrop-filter:blur(18px);overflow:hidden;
+  box-shadow:0 22px 50px -26px rgba(0,0,0,.9);
+}
+.panel-head{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:14px 16px;border-bottom:1px solid var(--line);
+}
+.panel-head h2{font-size:14px;font-weight:650;letter-spacing:.02em}
+.panel-head .tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.search{
+  height:34px;padding:0 12px;border-radius:9px;
+  border:1px solid var(--line-2);background:rgba(0,0,0,.28);
+  color:var(--txt);font-size:12.5px;outline:none;min-width:190px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.search:focus{border-color:rgba(255,95,162,.6);box-shadow:0 0 0 3px rgba(255,95,162,.1)}
+
+/* ---------------- 表格 ---------------- */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px}
+thead th{
+  text-align:left;font-weight:600;color:var(--dim);
+  font-size:11px;letter-spacing:.1em;
+  padding:11px 16px;border-bottom:1px solid var(--line);
+  white-space:nowrap;background:rgba(0,0,0,.16);
+}
+tbody td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.045);vertical-align:middle}
+tbody tr:hover{background:rgba(255,255,255,.035)}
+tbody tr:last-child td{border-bottom:0}
+.u{display:flex;align-items:center;gap:10px}
+.u .av{
+  width:30px;height:30px;border-radius:50%;flex:none;
+  display:grid;place-items:center;font-size:12px;font-weight:700;
+  background:linear-gradient(135deg,rgba(255,95,162,.9),rgba(167,139,250,.9));
+}
+.u b{font-weight:600}
+.mono{font-variant-numeric:tabular-nums;color:var(--txt-2)}
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:99px;font-size:11px;
+  border:1px solid var(--line-2);color:var(--txt-2);
+}
+.tag.admin{color:#ffc4dc;border-color:rgba(255,95,162,.45);background:rgba(255,95,162,.14)}
+.tag.ok{color:#a7f0cf;border-color:rgba(61,220,151,.4);background:rgba(61,220,151,.12)}
+.tag.bad{color:#ffb8b8;border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.12)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+
+.empty-row{text-align:center;color:var(--dim);padding:40px 16px;font-size:12.5px}
+.pager{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--dim)}
+.pager .grow{margin-left:auto;display:flex;gap:6px}
+
+/* ---------------- 登录门 ---------------- */
+.gate{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(4,4,9,.82);backdrop-filter:blur(12px)}
+.gate-card{
+  width:100%;max-width:380px;padding:28px;border-radius:22px;
+  border:1px solid var(--line-2);
+  background:linear-gradient(180deg,rgba(24,24,34,.98),rgba(13,13,20,.98));
+  box-shadow:0 40px 90px -30px #000;
+}
+.gate-card h2{font-size:17px;font-weight:700;margin-bottom:6px}
+.gate-card p{font-size:12px;color:var(--dim);margin-bottom:20px;line-height:1.7}
+.field{margin-bottom:13px}
+.field span{display:block;font-size:11.5px;color:var(--dim);margin-bottom:6px;letter-spacing:.08em}
+.field input{
+  width:100%;height:42px;padding:0 13px;border-radius:11px;
+  border:1px solid var(--line-2);background:rgba(255,255,255,.05);
+  color:var(--txt);font-size:13.5px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.field input:focus{border-color:rgba(255,95,162,.6);box-shadow:0 0 0 3px rgba(255,95,162,.1)}
+.gate-err{
+  margin-bottom:12px;padding:9px 12px;border-radius:9px;font-size:12px;
+  background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.4);color:#ffb8b8;
+}
+.gate-card .btn-primary{width:100%;height:44px;justify-content:center;font-size:13.5px;border-radius:12px}
+
+/* ---------------- 弹窗 ---------------- */
+.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:20px}
+.modal .mask{position:absolute;inset:0;background:rgba(3,3,8,.72);backdrop-filter:blur(8px)}
+.modal .box{
+  position:relative;width:100%;max-width:400px;padding:24px;border-radius:20px;
+  border:1px solid var(--line-2);
+  background:linear-gradient(180deg,rgba(24,24,34,.99),rgba(13,13,20,.99));
+  box-shadow:0 40px 90px -30px #000;
+  animation:pop .3s var(--ease) both;
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.modal h3{font-size:15px;font-weight:650;margin-bottom:16px}
+.modal .row{display:flex;gap:10px;margin-top:18px}
+.modal .row .btn{flex:1;justify-content:center;height:40px}
+
+/* ---------------- Toast ---------------- */
+.toasts{position:fixed;right:20px;bottom:20px;z-index:90;display:flex;flex-direction:column;gap:8px}
+.toast{
+  padding:10px 16px;border-radius:11px;font-size:12.5px;
+  border:1px solid var(--line-2);background:rgba(18,18,26,.96);
+  box-shadow:0 18px 40px -18px #000;
+  animation:pop .3s var(--ease) both;
+}
+.toast.ok{border-color:rgba(61,220,151,.45);color:#bff5dd}
+.toast.err{border-color:rgba(255,107,107,.45);color:#ffc0c0}
+
+/* ---------------- 站点设置 ---------------- */
+.site-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+.form-body{padding:16px 18px 20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sec{
+  margin:18px 0 12px;padding-top:14px;
+  border-top:1px solid var(--line);
+  font-size:11.5px;letter-spacing:.16em;color:var(--dim);font-weight:600;
+}
+.form-body .field{display:block;margin-bottom:12px}
+.form-body .field span{display:block;font-size:11.5px;color:var(--dim);margin-bottom:6px;letter-spacing:.06em}
+.form-body .field input{
+  width:100%;height:40px;padding:0 13px;border-radius:11px;
+  border:1px solid var(--line-2);background:rgba(255,255,255,.05);
+  color:var(--txt);font-size:13px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.form-body .field input::placeholder{color:#5b6076}
+.form-body .field input:focus{border-color:rgba(255,95,162,.6);box-shadow:0 0 0 3px rgba(255,95,162,.1)}
+
+.logo-row{display:flex;gap:16px;align-items:flex-start}
+.logo-preview{
+  width:88px;height:88px;border-radius:22px;flex:none;
+  display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(115deg,var(--a1),var(--a2) 48%,var(--a3));
+  box-shadow:0 14px 30px -14px rgba(255,95,162,.9),inset 0 1px 0 rgba(255,255,255,.4);
+  font-size:34px;font-weight:800;color:#fff;
+}
+.logo-preview img{width:100%;height:100%;object-fit:cover}
+.logo-ctrl{flex:1;min-width:0}
+.seg{display:inline-flex;padding:3px;border-radius:10px;background:rgba(0,0,0,.3);margin-bottom:12px}
+.seg-btn{
+  padding:7px 14px;border:0;border-radius:8px;background:transparent;
+  color:var(--txt-2);font-size:12px;cursor:pointer;transition:all .2s;
+}
+.seg-btn.is-active{
+  color:#fff;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.07));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);
+}
+.upload-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hint{font-size:11px;color:var(--dim)}
+
+.preview-panel{position:sticky;top:16px}
+.preview-body{padding:16px}
+.prev-brand{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.prev-mark{
+  width:38px;height:38px;border-radius:12px;flex:none;overflow:hidden;
+  display:grid;place-items:center;font-size:17px;font-weight:800;color:#fff;
+  background:linear-gradient(115deg,var(--a1),var(--a2) 48%,var(--a3));
+}
+.prev-mark img{width:100%;height:100%;object-fit:cover}
+.prev-name strong{display:block;font-size:13.5px;font-weight:700}
+.prev-name em{display:block;font-style:normal;font-size:9px;letter-spacing:.24em;color:var(--dim);margin-top:3px}
+.prev-stage{
+  border-radius:16px;border:1px solid var(--line);
+  background:radial-gradient(120% 90% at 20% 0%,rgba(255,95,162,.16),transparent 60%),rgba(0,0,0,.28);
+  padding:20px 16px;text-align:center;
+}
+.prev-kicker{font-size:9.5px;letter-spacing:.28em;color:rgba(255,255,255,.45)}
+.prev-title{
+  margin-top:10px;font-size:20px;font-weight:800;letter-spacing:.04em;line-height:1.25;
+  background:linear-gradient(100deg,#fff,#ffd7e8 40%,#c7b6ff 70%,#a9e6ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  word-break:break-word;
+}
+.prev-sub{margin-top:8px;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.1em}
+.prev-btn{
+  display:inline-block;margin-top:14px;padding:8px 20px;border-radius:99px;
+  background:linear-gradient(115deg,var(--a1),var(--a2) 48%,var(--a3));
+  color:#fff;font-size:11.5px;font-weight:600;letter-spacing:.08em;
+}
+.prev-tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}
+.prev-tags span{
+  padding:4px 10px;border-radius:99px;font-size:10px;
+  border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.55);
+}
+.prev-foot{margin-top:14px;font-size:9.5px;color:rgba(255,255,255,.25);letter-spacing:.06em;line-height:1.6}
+.preview-tip{margin-top:12px;font-size:11px;color:var(--dim);line-height:1.7}
+
+@media (max-width:1180px){
+  .site-grid{grid-template-columns:1fr}
+  .preview-panel{position:static}
+}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:12px}
+  .nav{flex-direction:row}
+  .side-foot{display:none}
+  .main{padding:16px 14px 32px}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.3"/><path d="M3.2 19.4c.7-3.1 3-4.8 5.8-4.8s5.1 1.7 5.8 4.8"/><path d="M16 5.2a3 3 0 010 6"/><path d="M17.5 14.8c1.9.5 3.2 2.1 3.7 4.6"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M6 3.8h9.5L19 7.4V20a1.2 1.2 0 01-1.2 1.2H6A1.2 1.2 0 014.8 20V5a1.2 1.2 0 011.2-1.2z"/><path d="M8.5 11h7"/><path d="M8.5 15h5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.6-5.9"/><path d="M20 4.5V10h-5.5"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 5.5H7.5A1.5 1.5 0 006 7v10a1.5 1.5 0 001.5 1.5H14"/><path d="M17 8.5L20.5 12 17 15.5"/><path d="M11 12h9"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7l.8 12.2h9.4L17.5 7"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8.5" cy="15.5" r="3.5"/><path d="M11 13l8-8"/><path d="M16.5 7.5l2 2"/><path d="M19 5l1.5 1.5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.5v5.4c0 4.2-2.8 7.3-7 9.1-4.2-1.8-7-4.9-7-9.1V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M6.4 6.4l11.2 11.2"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 00-3-3L5 17v3z"/><path d="M14.5 6.5l3 3"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.2"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l5-4.5 4 3.5 3-2.5 3.5 3.5"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 9h9.5a5.5 5.5 0 010 11H8"/><path d="M7.5 5.5L4 9l3.5 3.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+</svg>
+
+<div class="shell">
+  <!-- 侧栏 -->
+  <aside class="side">
+    <div class="side-brand">
+      <span class="brand-mark"><i></i></span>
+      <span>
+        <strong>免费音乐播放站</strong>
+        <em>ADMIN CONSOLE</em>
+      </span>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item is-active" data-page="overview"><svg><use href="#i-grid"/></svg> 概览</button>
+      <button class="nav-item" data-page="users"><svg><use href="#i-users"/></svg> 用户管理</button>
+      <button class="nav-item" data-page="site"><svg><use href="#i-pen"/></svg> 站点设置</button>
+      <button class="nav-item" data-page="audit"><svg><use href="#i-log"/></svg> 审计日志</button>
+    </nav>
+
+    <div class="side-foot">
+      <a href="/" target="_blank" rel="noopener">← 返回播放站</a><br />
+      <span id="footVer">v2.3</span>
+    </div>
+  </aside>
+
+  <!-- 主内容 -->
+  <main class="main">
+    <div class="top">
+      <div>
+        <h1 id="pageTitle">概览</h1>
+        <p class="sub" id="pageSub">服务运行状态与数据统计</p>
+      </div>
+      <div class="top-right">
+        <button class="btn" id="refreshBtn"><svg><use href="#i-refresh"/></svg> 刷新</button>
+        <div class="who" id="whoBox">
+          <span class="dot" id="whoInitial">A</span>
+          <span id="whoName">—</span>
+        </div>
+        <button class="btn" id="logoutBtn"><svg><use href="#i-out"/></svg> 退出</button>
+      </div>
+    </div>
+
+    <!-- 概览 -->
+    <section id="pageOverview">
+      <div class="grid cards" id="statCards"></div>
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head">
+          <h2>最近操作</h2>
+          <div class="tools"><button class="btn btn-sm" id="goAudit">查看全部</button></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>时间</th><th>操作者</th><th>动作</th><th>对象</th><th>备注</th></tr></thead>
+            <tbody id="recentAudit"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 用户 -->
+    <section id="pageUsers" hidden>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>用户列表</h2>
+          <div class="tools">
+            <input class="search" id="userSearch" placeholder="搜索用户名…" />
+            <button class="btn btn-primary" id="createUserBtn"><svg><use href="#i-plus"/></svg> 新建用户</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>用户</th><th>角色</th><th>状态</th>
+                <th>队列</th><th>最近</th><th>注册时间</th><th>最后登录</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <span id="pageInfo">—</span>
+          <div class="grow">
+            <button class="btn btn-sm" id="prevPage">上一页</button>
+            <button class="btn btn-sm" id="nextPage">下一页</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 站点设置 -->
+    <section id="pageSite" hidden>
+      <div class="site-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>站点外观</h2>
+            <div class="tools">
+              <button class="btn" id="siteReset"><svg><use href="#i-undo"/></svg> 恢复默认</button>
+              <button class="btn btn-primary" id="siteSave"><svg><use href="#i-check"/></svg> 保存设置</button>
+            </div>
+          </div>
+
+          <div class="form-body">
+            <div class="two">
+              <label class="field"><span>网站名称</span><input id="fSiteName" maxlength="24" placeholder="免费音乐播放站" /></label>
+              <label class="field"><span>英文副标题</span><input id="fBrandEn" maxlength="32" placeholder="FREE MUSIC STREAMING" /></label>
+            </div>
+
+            <h4 class="sec">Logo</h4>
+            <div class="logo-row">
+              <div class="logo-preview" id="logoPreview"></div>
+              <div class="logo-ctrl">
+                <div class="seg" id="logoModeSeg">
+                  <button type="button" class="seg-btn is-active" data-mode="text">文字 Logo</button>
+                  <button type="button" class="seg-btn" data-mode="image">图片 Logo</button>
+                </div>
+                <label class="field"><span>Logo 文字（1-4 个字）</span><input id="fLogoText" maxlength="4" placeholder="柒" /></label>
+                <div class="upload-row">
+                  <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+                  <button class="btn" id="logoPick"><svg><use href="#i-image"/></svg> 上传图片</button>
+                  <span class="hint" id="logoHint">PNG / JPG / WEBP / GIF，≤ 2MB</span>
+                </div>
+              </div>
+            </div>
+
+            <h4 class="sec">入场界面文案</h4>
+            <label class="field"><span>顶部小标题（Kicker）</span><input id="fKicker" maxlength="40" placeholder="LOCAL MUSIC STATION" /></label>
+            <div class="two">
+              <label class="field"><span>大标题（留空则用网站名称）</span><input id="fEntryTitle" maxlength="24" /></label>
+              <label class="field"><span>按钮文案</span><input id="fEntryBtn" maxlength="16" placeholder="进入播放站" /></label>
+            </div>
+            <label class="field"><span>副标题</span><input id="fEntrySub" maxlength="80" placeholder="搜索 · 试听 · 歌词 · 本机下载" /></label>
+            <label class="field"><span>标签（最多 6 个，用逗号分隔）</span><input id="fEntryTags" placeholder="多音源, 双音质, 歌词, 账号同步" /></label>
+            <label class="field"><span>页脚小字</span><input id="fEntryFoot" maxlength="120" /></label>
+          </div>
+        </div>
+
+        <div class="panel preview-panel">
+          <div class="panel-head"><h2>实时预览</h2></div>
+          <div class="preview-body">
+            <div class="prev-brand">
+              <div class="prev-mark" id="prevMark"></div>
+              <div class="prev-name">
+                <strong id="prevName">免费音乐播放站</strong>
+                <em id="prevEn">FREE MUSIC STREAMING</em>
+              </div>
+            </div>
+            <div class="prev-stage">
+              <div class="prev-kicker" id="prevKicker">LOCAL MUSIC STATION</div>
+              <div class="prev-title" id="prevTitle">免费音乐播放站</div>
+              <div class="prev-sub" id="prevSub">搜索 · 试听 · 歌词 · 本机下载</div>
+              <div class="prev-btn" id="prevBtn">进入播放站</div>
+              <div class="prev-tags" id="prevTags"></div>
+              <div class="prev-foot" id="prevFoot"></div>
+            </div>
+            <p class="preview-tip">保存后，播放站刷新即生效；会员无需重新登录。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 审计 -->
+    <section id="pageAudit" hidden>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>审计日志</h2>
+          <div class="tools"><span style="font-size:11.5px;color:var(--dim)">最近 200 条</span></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>时间</th><th>操作者</th><th>动作</th><th>对象</th><th>备注</th></tr></thead>
+            <tbody id="auditRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 登录门 -->
+<div class="gate" id="gate" hidden>
+  <div class="gate-card">
+    <h2>管理后台登录</h2>
+    <p>需要管理员账号。首次启动时系统会自动创建 <b>admin / admin</b>，登录后请及时改密码。</p>
+    <form id="gateForm">
+      <label class="field"><span>用户名</span><input id="gateUser" autocomplete="username" value="admin" /></label>
+      <label class="field"><span>密码</span><input id="gatePass" type="password" autocomplete="current-password" /></label>
+      <p class="gate-err" id="gateErr" hidden></p>
+      <button class="btn btn-primary" id="gateBtn" type="submit">登录</button>
+    </form>
+  </div>
+</div>
+
+<!-- 新建用户 -->
+<div class="modal" id="userModal" hidden>
+  <div class="mask" data-close="1"></div>
+  <div class="box">
+    <h3>新建用户</h3>
+    <label class="field"><span>用户名</span><input id="newName" placeholder="3-20 位，中文/字母/数字/下划线" /></label>
+    <label class="field"><span>密码</span><input id="newPass" type="password" placeholder="至少 6 位" /></label>
+    <label class="field"><span>角色</span>
+      <select id="newRole" class="search" style="width:100%;height:42px;border-radius:11px">
+        <option value="user">普通用户</option>
+        <option value="admin">管理员</option>
+      </select>
+    </label>
+    <p class="gate-err" id="newErr" hidden></p>
+    <div class="row">
+      <button class="btn" data-close="1">取消</button>
+      <button class="btn btn-primary" id="newSubmit">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- 通用确认 -->
+<div class="modal" id="askModal" hidden>
+  <div class="mask" data-close="1"></div>
+  <div class="box">
+    <h3 id="askTitle">确认操作</h3>
+    <p style="font-size:12.5px;color:var(--txt-2);line-height:1.7" id="askText"></p>
+    <label class="field" id="askField" hidden style="margin-top:14px">
+      <span id="askFieldLabel">输入</span>
+      <input id="askInput" type="text" />
+    </label>
+    <div class="row">
+      <button class="btn" data-close="1">取消</button>
+      <button class="btn btn-danger" id="askOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+(function(){
+'use strict';
+
+var $ = function(id){ return document.getElementById(id); };
+var PAGE = 'overview';
+var page = 1, size = 10, total = 0, q = '';
+var me = null;
+
+function toast(msg, kind){
+  var el = document.createElement('div');
+  el.className = 'toast ' + (kind || '');
+  el.textContent = msg;
+  $('toasts').appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2600);
+}
+
+function fmtTime(ts){
+  if (!ts) return '—';
+  var d = new Date(ts * 1000);
+  var p = function(n){ return n < 10 ? '0' + n : '' + n; };
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' +
+         p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+function fmtDur(sec){
+  if (!sec && sec !== 0) return '—';
+  var d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
+  if (d) return d + ' 天 ' + h + ' 小时';
+  if (h) return h + ' 小时 ' + m + ' 分';
+  return m + ' 分钟';
+}
+
+function api(path, opt){
+  opt = opt || {};
+  var init = { credentials: 'same-origin', method: opt.method || 'GET' };
+  if (opt.body){
+    init.headers = { 'Content-Type': 'application/json' };
+    init.body = JSON.stringify(opt.body);
+  }
+  return fetch(path, init).then(function(res){
+    return res.text().then(function(txt){
+      var data = {};
+      try { data = JSON.parse(txt); } catch(e){}
+      if (!res.ok){
+        var err = new Error(data.error || ('请求失败 (' + res.status + ')'));
+        err.status = res.status;
+        throw err;
+      }
+      return data;
+    });
+  });
+}
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---------------- 登录门 ---------------- */
+function showGate(msg){
+  $('gate').hidden = false;
+  $('gateErr').hidden = !msg;
+  if (msg) $('gateErr').textContent = msg;
+  setTimeout(function(){ $('gatePass').focus(); }, 100);
+}
+function hideGate(){ $('gate').hidden = true; }
+
+$('gateForm').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var u = $('gateUser').value.trim(), p = $('gatePass').value;
+  if (!u || !p) { showGate('请填写用户名和密码'); return; }
+  $('gateBtn').disabled = true;
+  api('/auth/login', { method: 'POST', body: { username: u, password: p } })
+    .then(function(d){
+      if (!d.user || d.user.role !== 'admin') throw new Error('该账号不是管理员');
+      me = d.user;
+      hideGate();
+      paintWho();
+      loadAll();
+    })
+    .catch(function(e){ showGate(e.message); })
+    .then(function(){ $('gateBtn').disabled = false; });
+});
+
+function paintWho(){
+  if (!me) return;
+  $('whoName').textContent = me.username;
+  $('whoInitial').textContent = (me.username || 'A').slice(0,1).toUpperCase();
+}
+
+$('logoutBtn').addEventListener('click', function(){
+  api('/auth/logout', { method: 'POST' }).then(function(){
+    me = null;
+    showGate('');
+    $('gatePass').value = '';
+  }).catch(function(){ showGate(''); });
+});
+
+/* ---------------- 导航 ---------------- */
+function goPage(p){
+  PAGE = p;
+  ['overview','users','site','audit'].forEach(function(k){
+    $('page' + k.charAt(0).toUpperCase() + k.slice(1)).hidden = (k !== p);
+  });
+  document.querySelectorAll('.nav-item').forEach(function(b){
+    b.classList.toggle('is-active', b.dataset.page === p);
+  });
+  var titles = {
+    overview: ['概览', '服务运行状态与数据统计'],
+    users: ['用户管理', '账号、角色、状态与云端数据'],
+    site: ['站点设置', '网站名称、Logo 与入场界面文案'],
+    audit: ['审计日志', '登录、注册与后台操作留痕']
+  };
+  $('pageTitle').textContent = titles[p][0];
+  $('pageSub').textContent = titles[p][1];
+  if (p === 'overview') loadStats();
+  if (p === 'users') loadUsers();
+  if (p === 'site') loadSite();
+  if (p === 'audit') loadAudit();
+}
+
+document.querySelectorAll('.nav-item').forEach(function(b){
+  b.addEventListener('click', function(){ goPage(b.dataset.page); });
+});
+
+/* ---------------- 概览 ---------------- */
+function loadStats(){
+  api('/admin/api/stats').then(function(s){
+    var cards = [
+      ['用户总数', s.users, '含管理员', true],
+      ['管理员', s.admins, '拥有后台权限', false],
+      ['7 天活跃', s.active_7d, '按最后登录统计', false],
+      ['已禁用', s.banned, '被停用的账号', false],
+      ['队列条目', s.queue_total, '所有账号合计', false],
+      ['最近播放', s.recent_total, '所有账号合计', false],
+      ['运行时长', fmtDur(s.uptime), '自 ' + fmtTime(s.started_at), false]
+    ];
+    $('statCards').innerHTML = cards.map(function(c){
+      return '<div class="card' + (c[3] ? ' accent' : '') + '">' +
+        '<div class="k">' + c[0] + '</div>' +
+        '<div class="v">' + esc(c[1]) + '</div>' +
+        '<div class="h">' + esc(c[2]) + '</div></div>';
+    }).join('');
+  }).catch(handleErr);
+}
+
+function loadRecentAudit(){
+  api('/admin/api/audit?limit=8').then(function(d){
+    $('recentAudit').innerHTML = auditRowsHtml(d.items, 8);
+  }).catch(function(){});
+}
+
+$('goAudit').addEventListener('click', function(){ goPage('audit'); });
+
+/* ---------------- 用户 ---------------- */
+function loadUsers(){
+  var url = '/admin/api/users?page=' + page + '&size=' + size + (q ? '&q=' + encodeURIComponent(q) : '');
+  api(url).then(function(d){
+    total = d.total;
+    var rows = d.items.map(function(u){
+      var inQueue = u.queue_count, rec = u.recent_count;
+      var self = me && me.id === u.id;
+      var roleTag = u.role === 'admin'
+        ? '<span class="tag admin">管理员</span>'
+        : '<span class="tag">普通用户</span>';
+      var stTag = u.banned
+        ? '<span class="tag bad">已禁用</span>'
+        : '<span class="tag ok">正常</span>';
+      var acts = [
+        '<button class="btn btn-sm" data-act="role" data-id="' + u.id + '" data-role="' +
+          (u.role === 'admin' ? 'user' : 'admin') + '"' + (self ? ' disabled' : '') + '>' +
+          (u.role === 'admin' ? '降为用户' : '设为管理员') + '</button>',
+        '<button class="btn btn-sm' + (u.banned ? '' : ' btn-danger') + '" data-act="ban" data-id="' +
+          u.id + '" data-ban="' + (u.banned ? '0' : '1') + '"' + (self ? ' disabled' : '') + '>' +
+          (u.banned ? '恢复' : '禁用') + '</button>',
+        '<button class="btn btn-sm" data-act="pwd" data-id="' + u.id + '">改密码</button>',
+        '<button class="btn btn-sm" data-act="clear" data-id="' + u.id + '">清数据</button>',
+        '<button class="btn btn-sm btn-danger" data-act="del" data-id="' + u.id + '" data-name="' +
+          esc(u.username) + '"' + (self ? ' disabled' : '') + '>删除</button>'
+      ].join('');
+      return '<tr>' +
+        '<td><div class="u"><span class="av">' + esc(u.username.slice(0,1).toUpperCase()) +
+          '</span><b>' + esc(u.username) + '</b></div></td>' +
+        '<td>' + roleTag + '</td>' +
+        '<td>' + stTag + '</td>' +
+        '<td class="mono">' + inQueue + '</td>' +
+        '<td class="mono">' + rec + '</td>' +
+        '<td class="mono">' + fmtTime(u.created_at) + '</td>' +
+        '<td class="mono">' + fmtTime(u.last_login) + '</td>' +
+        '<td><div class="acts">' + acts + '</div></td>' +
+      '</tr>';
+    });
+    $('userRows').innerHTML = rows.length ? rows.join('')
+      : '<tr><td colspan="8" class="empty-row">没有匹配的用户</td></tr>';
+
+    var from = total ? (page - 1) * size + 1 : 0;
+    var to = Math.min(page * size, total);
+    $('pageInfo').textContent = '共 ' + total + ' 个用户 · 显示 ' + from + '-' + to;
+    $('prevPage').disabled = page <= 1;
+    $('nextPage').disabled = page * size >= total;
+  }).catch(handleErr);
+}
+
+$('userRows').addEventListener('click', function(ev){
+  var b = ev.target.closest('button[data-act]');
+  if (!b || b.disabled) return;
+  var id = b.dataset.id, act = b.dataset.act;
+  if (act === 'role'){
+    api('/admin/api/users/update', { method: 'POST', body: { id: id, role: b.dataset.role } })
+      .then(function(){ toast('角色已更新', 'ok'); loadUsers(); })
+      .catch(handleErr);
+  } else if (act === 'ban'){
+    var ban = b.dataset.ban === '1';
+    api('/admin/api/users/update', { method: 'POST', body: { id: id, banned: ban } })
+      .then(function(){ toast(ban ? '已禁用该账号' : '已恢复该账号', 'ok'); loadUsers(); })
+      .catch(handleErr);
+  } else if (act === 'pwd'){
+    ask('重置密码', '请输入新密码（6-64 位）', '新密码', function(val){
+      if (!val || val.length < 6) { toast('密码至少 6 位', 'err'); return false; }
+      api('/admin/api/users/update', { method: 'POST', body: { id: id, password: val } })
+        .then(function(){ toast('密码已重置', 'ok'); })
+        .catch(handleErr);
+      return true;
+    });
+  } else if (act === 'clear'){
+    ask('清空云端数据', '将清空该账号的播放队列与最近播放，此操作不可撤销。', null, function(){
+      api('/admin/api/users/update', { method: 'POST', body: { id: id, queue: [], recent: [] } })
+        .then(function(){ toast('已清空该账号数据', 'ok'); loadUsers(); })
+        .catch(handleErr);
+      return true;
+    });
+  } else if (act === 'del'){
+    ask('删除用户', '确认删除账号「' + b.dataset.name + '」？该操作不可恢复。', null, function(){
+      api('/admin/api/users/delete', { method: 'POST', body: { id: id } })
+        .then(function(){ toast('已删除该账号', 'ok'); loadUsers(); })
+        .catch(handleErr);
+      return true;
+    });
+  }
+});
+
+$('userSearch').addEventListener('input', function(){
+  q = this.value.trim();
+  page = 1;
+  clearTimeout(window.__t);
+  window.__t = setTimeout(loadUsers, 260);
+});
+$('prevPage').addEventListener('click', function(){ if (page > 1){ page--; loadUsers(); } });
+$('nextPage').addEventListener('click', function(){ if (page * size < total){ page++; loadUsers(); } });
+
+/* ---------------- 新建用户 ---------------- */
+$('createUserBtn').addEventListener('click', function(){
+  $('userModal').hidden = false;
+  $('newErr').hidden = true;
+  $('newName').value = '';
+  $('newPass').value = '';
+  $('newRole').value = 'user';
+  setTimeout(function(){ $('newName').focus(); }, 100);
+});
+
+$('newSubmit').addEventListener('click', function(){
+  var name = $('newName').value.trim(), pass = $('newPass').value, role = $('newRole').value;
+  $('newErr').hidden = true;
+  this.disabled = true;
+  api('/admin/api/users', { method: 'POST', body: { username: name, password: pass, role: role } })
+    .then(function(){
+      $('userModal').hidden = true;
+      toast('用户已创建', 'ok');
+      loadUsers();
+    })
+    .catch(function(e){
+      $('newErr').hidden = false;
+      $('newErr').textContent = e.message;
+    })
+    .then(function(){ $('newSubmit').disabled = false; });
+});
+
+/* ---------------- 审计 ---------------- */
+function auditRowsHtml(items, limit){
+  var list = (items || []).slice(0, limit || 200);
+  if (!list.length) return '<tr><td colspan="5" class="empty-row">暂无记录</td></tr>';
+  return list.map(function(a){
+    return '<tr>' +
+      '<td class="mono">' + fmtTime(a.ts) + '</td>' +
+      '<td>' + esc(a.actor || '—') + '</td>' +
+      '<td class="mono">' + esc(a.action || '—') + '</td>' +
+      '<td>' + esc(a.target || '—') + '</td>' +
+      '<td style="color:var(--dim)">' + esc(a.note || '') + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function loadAudit(){
+  api('/admin/api/audit?limit=200').then(function(d){
+    $('auditRows').innerHTML = auditRowsHtml(d.items, 200);
+  }).catch(handleErr);
+}
+
+/* ---------------- 站点设置 ---------------- */
+var siteCfg = null;
+var logoMode = 'text';
+
+function loadSite(){
+  api('/admin/api/site').then(function(d){
+    siteCfg = d.site;
+    fillSite(d.site);
+  }).catch(handleErr);
+}
+
+function fillSite(c){
+  $('fSiteName').value = c.siteName || '';
+  $('fBrandEn').value = c.brandEn || '';
+  $('fKicker').value = c.entryKicker || '';
+  $('fEntryTitle').value = c.entryTitle || '';
+  $('fEntrySub').value = c.entrySub || '';
+  $('fEntryBtn').value = c.entryBtn || '';
+  $('fEntryTags').value = (c.entryTags || []).join(', ');
+  $('fEntryFoot').value = c.entryFoot || '';
+  $('fLogoText').value = (c.logo && c.logo.text) || '';
+  logoMode = (c.logo && c.logo.mode) || 'text';
+  document.querySelectorAll('#logoModeSeg .seg-btn').forEach(function(b){
+    b.classList.toggle('is-active', b.dataset.mode === logoMode);
+  });
+  $('logoHint').textContent = (c.logo && c.logo.url)
+    ? '当前使用图片 Logo（重新上传会替换）'
+    : 'PNG / JPG / WEBP / GIF，≤ 2MB';
+  renderPreview();
+}
+
+function readForm(){
+  var tags = $('fEntryTags').value.split(/[,，、]/).map(function(s){ return s.trim(); })
+    .filter(function(s){ return !!s; }).slice(0, 6);
+  return {
+    siteName: $('fSiteName').value,
+    brandEn: $('fBrandEn').value,
+    logo: {
+      mode: logoMode,
+      text: $('fLogoText').value,
+      url: (siteCfg && siteCfg.logo && siteCfg.logo.url) || ''
+    },
+    entryKicker: $('fKicker').value,
+    entryTitle: $('fEntryTitle').value,
+    entrySub: $('fEntrySub').value,
+    entryBtn: $('fEntryBtn').value,
+    entryTags: tags,
+    entryFoot: $('fEntryFoot').value
+  };
+}
+
+function renderPreview(){
+  var c = readForm();
+  var name = c.siteName || '免费音乐播放站';
+  $('prevName').textContent = name;
+  $('prevEn').textContent = c.brandEn || '';
+  $('prevKicker').textContent = c.entryKicker || '';
+  $('prevTitle').textContent = c.entryTitle || name;
+  $('prevSub').textContent = c.entrySub || '';
+  $('prevBtn').textContent = c.entryBtn || '进入播放站';
+  $('prevFoot').textContent = c.entryFoot || '';
+  $('prevTags').innerHTML = (c.entryTags || []).map(function(t){
+    return '<span>' + esc(t) + '</span>';
+  }).join('');
+
+  var mark = $('prevMark');
+  var big = $('logoPreview');
+  var useImg = (c.logo.mode === 'image' && c.logo.url);
+  if (useImg){
+    mark.innerHTML = '<img src="' + esc(c.logo.url) + '" alt="logo" />';
+    big.innerHTML = '<img src="' + esc(c.logo.url) + '" alt="logo" />';
+  } else {
+    mark.textContent = c.logo.text || '柒';
+    big.textContent = c.logo.text || '柒';
+  }
+}
+
+document.querySelectorAll('#logoModeSeg .seg-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    logoMode = b.dataset.mode;
+    document.querySelectorAll('#logoModeSeg .seg-btn').forEach(function(x){
+      x.classList.toggle('is-active', x === b);
+    });
+    renderPreview();
+  });
+});
+
+['fSiteName','fBrandEn','fKicker','fEntryTitle','fEntrySub','fEntryBtn','fEntryTags','fEntryFoot','fLogoText']
+  .forEach(function(id){
+    $(id).addEventListener('input', renderPreview);
+  });
+
+$('siteSave').addEventListener('click', function(){
+  var btn = this;
+  btn.disabled = true;
+  api('/admin/api/site', { method: 'POST', body: { site: readForm() } })
+    .then(function(d){
+      siteCfg = d.site;
+      fillSite(d.site);
+      toast('已保存，播放站刷新后生效', 'ok');
+    })
+    .catch(handleErr)
+    .then(function(){ btn.disabled = false; });
+});
+
+$('siteReset').addEventListener('click', function(){
+  ask('恢复默认外观', '站名、Logo、入场文案都会恢复成出厂默认，确定吗？', null, function(){
+    api('/admin/api/site/reset', { method: 'POST', body: {} })
+      .then(function(d){
+        siteCfg = d.site;
+        fillSite(d.site);
+        toast('已恢复默认', 'ok');
+      })
+      .catch(handleErr);
+    return true;
+  });
+});
+
+$('logoPick').addEventListener('click', function(){ $('logoFile').click(); });
+
+$('logoFile').addEventListener('change', function(){
+  var file = this.files && this.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024){ toast('图片不能超过 2MB', 'err'); return; }
+  if (!/^image\/(png|jpeg|jpg|webp|gif)$/.test(file.type)){ toast('只支持 PNG / JPG / WEBP / GIF', 'err'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(){
+    api('/admin/api/site/logo', { method: 'POST', body: { dataUrl: reader.result } })
+      .then(function(d){
+        siteCfg = d.site;
+        logoMode = 'image';
+        document.querySelectorAll('#logoModeSeg .seg-btn').forEach(function(b){
+          b.classList.toggle('is-active', b.dataset.mode === 'image');
+        });
+        $('logoHint').textContent = '已上传：' + d.url;
+        renderPreview();
+        toast('Logo 已上传并启用', 'ok');
+      })
+      .catch(handleErr);
+  };
+  reader.readAsDataURL(file);
+  this.value = '';
+});
+
+/* ---------------- 确认框 ---------------- */
+var askCb = null;
+function ask(title, text, fieldLabel, cb){
+  $('askTitle').textContent = title;
+  $('askText').textContent = text;
+  $('askField').hidden = !fieldLabel;
+  $('askFieldLabel').textContent = fieldLabel || '';
+  $('askInput').value = '';
+  askCb = cb;
+  $('askModal').hidden = false;
+  if (fieldLabel) setTimeout(function(){ $('askInput').focus(); }, 100);
+}
+$('askOk').addEventListener('click', function(){
+  var val = $('askInput').value;
+  var ok = askCb ? askCb($('askField').hidden ? null : val) : true;
+  if (ok !== false) $('askModal').hidden = true;
+});
+document.querySelectorAll('[data-close]').forEach(function(el){
+  el.addEventListener('click', function(){
+    el.closest('.modal').hidden = true;
+  });
+});
+
+/* ---------------- 错误处理 ---------------- */
+function handleErr(e){
+  if (e.status === 401){ me = null; showGate('登录已过期，请重新登录'); return; }
+  if (e.status === 403){ showGate('当前账号没有管理员权限'); return; }
+  toast(e.message || '操作失败', 'err');
+}
+
+/* ---------------- 启动 ---------------- */
+$('refreshBtn').addEventListener('click', function(){
+  if (PAGE === 'overview'){ loadStats(); loadRecentAudit(); }
+  if (PAGE === 'users') loadUsers();
+  if (PAGE === 'site') loadSite();
+  if (PAGE === 'audit') loadAudit();
+  toast('已刷新');
+});
+
+api('/auth/me').then(function(d){
+  if (!d.user || d.user.role !== 'admin'){ showGate(d.user ? '当前账号不是管理员' : ''); return; }
+  me = d.user;
+  paintWho();
+  loadAll();
+}).catch(function(){ showGate(''); });
+
+function loadAll(){
+  loadStats();
+  loadRecentAudit();
+  goPage('overview');
+}
+})();
+</script>
+</body>
+</html>
